@@ -1,0 +1,273 @@
+version: "3.8"
+
+# ─────────────────────────────────────────
+#  NAMED VOLUMES
+#  Docker manages these on your host machine.
+#  Data survives container restarts.
+# ─────────────────────────────────────────
+volumes:
+  postgres_data:       # Stores your warehouse DB (NYC taxi star schema)
+  airflow_db_data:     # Stores Airflow's internal metadata DB
+  airflow_logs:        # Stores DAG run logs
+  dbt_profiles:        # Stores dbt connection profiles
+
+# ─────────────────────────────────────────
+#  NETWORKS
+#  All services talk to each other on one
+#  internal bridge network.
+# ─────────────────────────────────────────
+networks:
+  pipeline_net:
+    driver: bridge
+
+# ─────────────────────────────────────────
+#  REUSABLE ANCHOR
+#  Airflow has multiple services (webserver,
+#  scheduler, worker). They all share the
+#  same env vars. Define once, reuse below.
+# ─────────────────────────────────────────
+x-airflow-common: &airflow-common
+  image: apache/airflow:2.8.1
+  environment:
+    # Points Airflow to its own metadata database (airflow_db service)
+    AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@airflow_db:5432/airflow
+
+    # Use LocalExecutor — runs tasks as subprocesses on the scheduler
+    # Good for single-machine setups. No Celery/Redis needed.
+    AIRFLOW__CORE__EXECUTOR: LocalExecutor
+
+    # Disable the example DAGs that ship with Airflow (keeps UI clean)
+    AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+
+    # Secret key for signing Airflow sessions (change in production!)
+    AIRFLOW__WEBSERVER__SECRET_KEY: "nyc_taxi_secret_key_change_in_prod"
+
+    # Where Airflow looks for your DAG files (mounted from ./dags)
+    AIRFLOW__CORE__DAGS_FOLDER: /opt/airflow/dags
+
+    # Connection string to YOUR warehouse DB — used inside DAG Python code
+    # Your ingestion scripts will read this env var to connect to postgres
+    WAREHOUSE_CONN: postgresql+psycopg2://warehouse:warehouse@postgres:5432/nyc_taxi
+
+    # Where dbt profiles.yml lives inside the container
+    DBT_PROFILES_DIR: /opt/dbt/profiles
+
+  volumes:
+    # Your DAG files (Python) → mounted into Airflow
+    - ./dags:/opt/airflow/dags
+
+    # Your dbt project folder → mounted into Airflow so it can run dbt commands
+    - ./dbt:/opt/dbt
+
+    # Your ingestion scripts (Python) → mounted so DAGs can call them
+    - ./ingestion:/opt/ingestion
+
+    # Airflow logs volume
+    - airflow_logs:/opt/airflow/logs
+
+    # dbt profiles volume
+    - dbt_profiles:/opt/dbt/profiles
+
+  networks:
+    - pipeline_net
+
+  # Airflow services must wait for airflow_db to be healthy before starting
+  depends_on:
+    airflow_db:
+      condition: service_healthy
+
+
+# ═══════════════════════════════════════════
+#  SERVICES
+# ═══════════════════════════════════════════
+services:
+
+  # ───────────────────────────────────────
+  #  1. POSTGRES — YOUR DATA WAREHOUSE
+  #
+  #  This is where your star schema lives.
+  #  raw schema   → landed parquet data
+  #  staging schema → cleaned/typed data
+  #  marts schema  → fact + dim tables
+  #───────────────────────────────────────
+  postgres:
+    image: postgres:15
+    container_name: nyc_warehouse
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: warehouse
+      POSTGRES_PASSWORD: warehouse
+      POSTGRES_DB: nyc_taxi
+    volumes:
+      # Persists your warehouse data across restarts
+      - postgres_data:/var/lib/postgresql/data
+
+      # SQL init scripts — run ONCE on first container creation
+      # Use this to create your raw/staging/marts schemas upfront
+      - ./init_sql:/docker-entrypoint-initdb.d
+    ports:
+      # Expose to your host machine so you can connect with DBeaver/psql
+      - "5432:5432"
+    networks:
+      - pipeline_net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U warehouse -d nyc_taxi"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+
+  # ───────────────────────────────────────
+  #  2. AIRFLOW DB — METADATA DATABASE
+  #
+  #  Airflow needs its OWN separate postgres
+  #  to store DAG runs, task states, logs,
+  #  connections, variables, etc.
+  #  NEVER mix this with your warehouse DB.
+  # ───────────────────────────────────────
+  airflow_db:
+    image: postgres:15
+    container_name: airflow_metadata_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: airflow
+      POSTGRES_PASSWORD: airflow
+      POSTGRES_DB: airflow
+    volumes:
+      - airflow_db_data:/var/lib/postgresql/data
+    networks:
+      - pipeline_net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U airflow -d airflow"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+
+  # ───────────────────────────────────────
+  #  3. AIRFLOW INIT
+  #
+  #  Runs ONCE on startup. It:
+  #  - Migrates/creates Airflow's DB schema
+  #  - Creates the default admin user
+  #  Then exits (it's a one-shot job, not
+  #  a long-running service).
+  # ───────────────────────────────────────
+  airflow_init:
+    <<: *airflow-common
+    container_name: airflow_init
+    entrypoint: /bin/bash
+    command:
+      - -c
+      - |
+        airflow db migrate
+        airflow users create \
+          --username admin \
+          --password admin \
+          --firstname Admin \
+          --lastname User \
+          --role Admin \
+          --email admin@example.com
+    restart: on-failure
+
+
+  # ───────────────────────────────────────
+  #  4. AIRFLOW WEBSERVER
+  #
+  #  The Airflow UI. Visit:
+  #  http://localhost:8080
+  #  Login: admin / admin
+  # ───────────────────────────────────────
+  airflow_webserver:
+    <<: *airflow-common
+    container_name: airflow_webserver
+    command: webserver
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    depends_on:
+      airflow_init:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+
+  # ───────────────────────────────────────
+  #  5. AIRFLOW SCHEDULER
+  #
+  #  The brain of Airflow. It:
+  #  - Reads your DAG files continuously
+  #  - Triggers tasks when schedule is due
+  #  - Sends tasks to the executor to run
+  #
+  #  With LocalExecutor, it also RUNS tasks
+  #  as subprocesses (no separate worker needed)
+  # ───────────────────────────────────────
+  airflow_scheduler:
+    <<: *airflow-common
+    container_name: airflow_scheduler
+    command: scheduler
+    restart: unless-stopped
+    depends_on:
+      airflow_init:
+        condition: service_completed_successfully
+
+
+  # ───────────────────────────────────────
+  #  6. DBT
+  #
+  #  dbt doesn't run as a server — it's a
+  #  CLI tool. We run it as a lightweight
+  #  container that Airflow calls via
+  #  BashOperator or dbt Cloud operator.
+  #
+  #  This service is useful for:
+  #  - Running dbt manually: docker compose run dbt run
+  #  - Airflow calling: docker exec dbt dbt run
+  # ───────────────────────────────────────
+  dbt:
+    image: ghcr.io/dbt-labs/dbt-postgres:1.7.0
+    container_name: dbt
+    restart: unless-stopped
+    entrypoint: ["tail", "-f", "/dev/null"]   # Keep container alive for exec calls
+    environment:
+      DBT_PROFILES_DIR: /opt/dbt/profiles
+    volumes:
+      # Mount your dbt project
+      - ./dbt:/opt/dbt
+      # dbt profiles.yml (has your postgres connection)
+      - dbt_profiles:/opt/dbt/profiles
+    networks:
+      - pipeline_net
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+
+  # ───────────────────────────────────────
+  #  7. PGADMIN  (optional but helpful)
+  #
+  #  A web UI to browse your postgres DBs.
+  #  Visit: http://localhost:5050
+  #  Login: admin@admin.com / admin
+  #
+  #  Connect to warehouse:  host=postgres, port=5432
+  #  Connect to airflow db: host=airflow_db, port=5432
+  # ───────────────────────────────────────
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    networks:
+      - pipeline_net
+    depends_on:
+      postgres:
+        condition: service_healthy
