@@ -1,12 +1,10 @@
-version: "3.8"
-
 # ─────────────────────────────────────────
 #  NAMED VOLUMES
-#  Docker manages these on your host machine.
+#  Docker manages these on host machine.
 #  Data survives container restarts.
 # ─────────────────────────────────────────
 volumes:
-  postgres_data:       # Stores your warehouse DB (NYC taxi star schema)
+  postgres_data:       # Stores warehouse DB (NYC taxi star schema)
   airflow_db_data:     # Stores Airflow's internal metadata DB
   airflow_logs:        # Stores DAG run logs
   dbt_profiles:        # Stores dbt connection profiles
@@ -42,24 +40,24 @@ x-airflow-common: &airflow-common
     # Secret key for signing Airflow sessions (change in production!)
     AIRFLOW__WEBSERVER__SECRET_KEY: "nyc_taxi_secret_key_change_in_prod"
 
-    # Where Airflow looks for your DAG files (mounted from ./dags)
+    # Where Airflow looks for DAG files (mounted from ./dags)
     AIRFLOW__CORE__DAGS_FOLDER: /opt/airflow/dags
 
-    # Connection string to YOUR warehouse DB — used inside DAG Python code
-    # Your ingestion scripts will read this env var to connect to postgres
+    # Connection string to warehouse DB — used inside DAG Python code
+    # ingestion scripts will read this env var to connect to postgres
     WAREHOUSE_CONN: postgresql+psycopg2://warehouse:warehouse@postgres:5432/nyc_taxi
 
     # Where dbt profiles.yml lives inside the container
     DBT_PROFILES_DIR: /opt/dbt/profiles
 
   volumes:
-    # Your DAG files (Python) → mounted into Airflow
+    # DAG files (Python) → mounted into Airflow
     - ./dags:/opt/airflow/dags
 
-    # Your dbt project folder → mounted into Airflow so it can run dbt commands
+    # dbt project folder → mounted into Airflow so it can run dbt commands
     - ./dbt:/opt/dbt
 
-    # Your ingestion scripts (Python) → mounted so DAGs can call them
+    # ingestion scripts (Python) → mounted so DAGs can call them
     - ./ingestion:/opt/ingestion
 
     # Airflow logs volume
@@ -83,9 +81,9 @@ x-airflow-common: &airflow-common
 services:
 
   # ───────────────────────────────────────
-  #  1. POSTGRES — YOUR DATA WAREHOUSE
+  #  1. POSTGRES — DATA WAREHOUSE
   #
-  #  This is where your star schema lives.
+  #  This is where star schema lives.
   #  raw schema   → landed parquet data
   #  staging schema → cleaned/typed data
   #  marts schema  → fact + dim tables
@@ -99,15 +97,15 @@ services:
       POSTGRES_PASSWORD: warehouse
       POSTGRES_DB: nyc_taxi
     volumes:
-      # Persists your warehouse data across restarts
+      # Persists warehouse data across restarts
       - postgres_data:/var/lib/postgresql/data
 
       # SQL init scripts — run ONCE on first container creation
       # Use this to create your raw/staging/marts schemas upfront
       - ./init_sql:/docker-entrypoint-initdb.d
     ports:
-      # Expose to your host machine so you can connect with DBeaver/psql
-      - "5432:5432"
+      # Expose to host machine so can be connected with DBeaver/psql
+      - "5433:5432"
     networks:
       - pipeline_net
     healthcheck:
@@ -123,7 +121,7 @@ services:
   #  Airflow needs its OWN separate postgres
   #  to store DAG runs, task states, logs,
   #  connections, variables, etc.
-  #  NEVER mix this with your warehouse DB.
+  #  NEVER mix this with warehouse DB.
   # ───────────────────────────────────────
   airflow_db:
     image: postgres:15
@@ -199,7 +197,7 @@ services:
   #  5. AIRFLOW SCHEDULER
   #
   #  The brain of Airflow. It:
-  #  - Reads your DAG files continuously
+  #  - Reads DAG files continuously
   #  - Triggers tasks when schedule is due
   #  - Sends tasks to the executor to run
   #
@@ -236,9 +234,9 @@ services:
     environment:
       DBT_PROFILES_DIR: /opt/dbt/profiles
     volumes:
-      # Mount your dbt project
+      # Mount dbt project
       - ./dbt:/opt/dbt
-      # dbt profiles.yml (has your postgres connection)
+      # dbt profiles.yml (has postgres connection)
       - dbt_profiles:/opt/dbt/profiles
     networks:
       - pipeline_net
@@ -248,7 +246,7 @@ services:
 
 
   # ───────────────────────────────────────
-  #  7. PGADMIN  (optional but helpful)
+  #  7. PGADMIN  
   #
   #  A web UI to browse your postgres DBs.
   #  Visit: http://localhost:5050
