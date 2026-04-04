@@ -1,0 +1,373 @@
+<mxGraphModel dx="1422" dy="762" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1654" pageHeight="1169" math="0" shadow="0">
+  <root>
+    <mxCell id="0" />
+    <mxCell id="1" parent="0" />
+
+    <!-- Title -->
+    <mxCell id="title" value="Batch ETL Pipeline — NYC Taxi Data" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=20;fontStyle=1;fontColor=#1a1a2e;" vertex="1" parent="1">
+      <mxGeometry x="400" y="30" width="700" height="40" as="geometry" />
+    </mxCell>
+
+    <mxCell id="subtitle" value="Technologies: Python · dbt · Apache Airflow · PostgreSQL · Docker" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontSize=11;fontColor=#666666;" vertex="1" parent="1">
+      <mxGeometry x="400" y="68" width="700" height="24" as="geometry" />
+    </mxCell>
+
+    <!-- ───────────────────────────────────────────────── -->
+    <!-- LANE BACKGROUNDS -->
+    <!-- ───────────────────────────────────────────────── -->
+
+    <!-- Lane 1: Source -->
+    <mxCell id="lane1_bg" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0f4ff;strokeColor=#b0b8d9;strokeWidth=1;arcSize=4;" vertex="1" parent="1">
+      <mxGeometry x="60" y="110" width="180" height="860" as="geometry" />
+    </mxCell>
+    <mxCell id="lane1_label" value="SOURCE" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=10;fontStyle=1;fontColor=#4a5284;letterSpacing=2;" vertex="1" parent="1">
+      <mxGeometry x="60" y="114" width="180" height="24" as="geometry" />
+    </mxCell>
+
+    <!-- Lane 2: Ingestion -->
+    <mxCell id="lane2_bg" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f5f0ff;strokeColor=#c0a8e8;strokeWidth=1;arcSize=4;" vertex="1" parent="1">
+      <mxGeometry x="260" y="110" width="200" height="860" as="geometry" />
+    </mxCell>
+    <mxCell id="lane2_label" value="EXTRACT &amp; LOAD" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=10;fontStyle=1;fontColor=#6b3fa0;letterSpacing=2;" vertex="1" parent="1">
+      <mxGeometry x="260" y="114" width="200" height="24" as="geometry" />
+    </mxCell>
+
+    <!-- Lane 3: Transform -->
+    <mxCell id="lane3_bg" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f0fff8;strokeColor=#a8d8c0;strokeWidth=1;arcSize=4;" vertex="1" parent="1">
+      <mxGeometry x="480" y="110" width="220" height="860" as="geometry" />
+    </mxCell>
+    <mxCell id="lane3_label" value="TRANSFORM (dbt)" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=10;fontStyle=1;fontColor=#1a7a4a;letterSpacing=2;" vertex="1" parent="1">
+      <mxGeometry x="480" y="114" width="220" height="24" as="geometry" />
+    </mxCell>
+
+    <!-- Lane 4: Warehouse -->
+    <mxCell id="lane4_bg" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff8f0;strokeColor=#e0c090;strokeWidth=1;arcSize=4;" vertex="1" parent="1">
+      <mxGeometry x="720" y="110" width="200" height="860" as="geometry" />
+    </mxCell>
+    <mxCell id="lane4_label" value="WAREHOUSE" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=10;fontStyle=1;fontColor=#8a5a00;letterSpacing=2;" vertex="1" parent="1">
+      <mxGeometry x="720" y="114" width="200" height="24" as="geometry" />
+    </mxCell>
+
+    <!-- Lane 5: Orchestration -->
+    <mxCell id="lane5_bg" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff0f0;strokeColor=#e0a0a0;strokeWidth=1;arcSize=4;" vertex="1" parent="1">
+      <mxGeometry x="940" y="110" width="200" height="860" as="geometry" />
+    </mxCell>
+    <mxCell id="lane5_label" value="ORCHESTRATION" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;fontSize=10;fontStyle=1;fontColor=#8a1a1a;letterSpacing=2;" vertex="1" parent="1">
+      <mxGeometry x="940" y="114" width="200" height="24" as="geometry" />
+    </mxCell>
+
+    <!-- ───────────────────────────────────────────────── -->
+    <!-- SOURCE LAYER -->
+    <!-- ───────────────────────────────────────────────── -->
+
+    <mxCell id="nyc_source" value="&lt;b&gt;NYC TLC Portal&lt;/b&gt;&lt;br/&gt;Public Parquet files&lt;br/&gt;&lt;font color='#888888'&gt;~500MB–1GB / month&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dce4ff;strokeColor=#4a5284;strokeWidth=1.5;fontSize=11;arcSize=12;align=center;" vertex="1" parent="1">
+      <mxGeometry x="80" y="170" width="140" height="70" as="geometry" />
+    </mxCell>
+
+    <mxCell id="monthly_file" value="&lt;b&gt;Monthly Parquet File&lt;/b&gt;&lt;br/&gt;yellow_tripdata_YYYY-MM&lt;br/&gt;&lt;font color='#888888'&gt;Millions of rows&lt;/font&gt;" style="shape=document;whiteSpace=wrap;html=1;fillColor=#dce4ff;strokeColor=#4a5284;strokeWidth=1.5;fontSize=11;align=center;" vertex="1" parent="1">
+      <mxGeometry x="80" y="300" width="140" height="70" as="geometry" />
+    </mxCell>
+
+    <mxCell id="schema_note" value="Columns:&lt;br/&gt;• pickup_datetime&lt;br/&gt;• dropoff_datetime&lt;br/&gt;• passenger_count&lt;br/&gt;• trip_distance&lt;br/&gt;• fare_amount&lt;br/&gt;• payment_type&lt;br/&gt;• PU/DO location_id" style="text;html=1;strokeColor=#b0b8d9;fillColor=#eef1ff;rounded=1;arcSize=8;fontSize=10;align=left;verticalAlign=top;spacingLeft=6;spacingTop=4;" vertex="1" parent="1">
+      <mxGeometry x="72" y="420" width="156" height="130" as="geometry" />
+    </mxCell>
+
+    <!-- ───────────────────────────────────────────────── -->
+    <!-- EXTRACT & LOAD LAYER -->
+    <!-- ───────────────────────────────────────────────── -->
+
+    <mxCell id="python_script" value="&lt;b&gt;Python Ingestion Script&lt;/b&gt;&lt;br/&gt;ingest.py&lt;br/&gt;&lt;font color='#888888'&gt;pandas · pyarrow · SQLAlchemy&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e8d9ff;strokeColor=#6b3fa0;strokeWidth=1.5;fontSize=11;arcSize=12;align=center;" vertex="1" parent="1">
+      <mxGeometry x="280" y="170" width="160" height="70" as="geometry" />
+    </mxCell>
+
+    <mxCell id="idempotent" value="&lt;b&gt;Idempotency Check&lt;/b&gt;&lt;br/&gt;Deduplicate on&lt;br/&gt;(year, month) before insert" style="rhombus;whiteSpace=wrap;html=1;fillColor=#e8d9ff;strokeColor=#6b3fa0;strokeWidth=1.5;fontSize=10;align=center;" vertex="1" parent="1">
+      <mxGeometry x="275" y="290" width="170" height="80" as="geometry" />
+    </mxCell>
+
+    <mxCell id="raw_table" value="&lt;b&gt;raw_taxi_trips&lt;/b&gt;&lt;br/&gt;PostgreSQL table&lt;br/&gt;&lt;font color='#888888'&gt;No transformations — as-is&lt;/font&gt;" style="shape=table;startSize=30;container=0;collapsible=0;childLayout=tableLayout;fixedRows=1;rowLines=0;fontStyle=1;align=center;resizeLast=1;whiteSpace=wrap;html=1;fillColor=#e8d9ff;strokeColor=#6b3fa0;strokeWidth=1.5;fontSize=11;arcSize=6;rounded=1;" vertex="1" parent="1">
+      <mxGeometry x="278" y="430" width="164" height="60" as="geometry" />
+    </mxCell>
+
+    <mxCell id="raw_note" value="Schema: RAW (untouched)" style="text;html=1;strokeColor=none;fillColor=none;fontSize=10;fontColor=#6b3fa0;align=center;fontStyle=2;" vertex="1" parent="1">
+      <mxGeometry x="278" y="498" width="164" height="20" as="geometry" />
+    </mxCell>
+
+    <!-- ───────────────────────────────────────────────── -->
+    <!-- TRANSFORM (dbt) LAYER -->
+    <!-- ───────────────────────────────────────────────── -->
+
+    <!-- Staging -->
+    <mxCell id="staging_header" value="STAGING LAYER" style="text;html=1;strokeColor=none;fillColor=none;fontSize=9;fontStyle=1;fontColor=#1a7a4a;letterSpacing=1;align=center;" vertex="1" parent="1">
+      <mxGeometry x="490" y="158" width="200" height="18" as="geometry" />
+    </mxCell>
+
+    <mxCell id="stg_trips" value="&lt;b&gt;stg_taxi_trips&lt;/b&gt;&lt;br/&gt;&lt;font color='#888888'&gt;Rename · cast types · filter nulls&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c8f0dc;strokeColor=#1a7a4a;strokeWidth=1.5;fontSize=11;arcSize=10;align=center;" vertex="1" parent="1">
+      <mxGeometry x="498" y="178" width="186" height="56" as="geometry" />
+    </mxCell>
+
+    <mxCell id="stg_locations" value="&lt;b&gt;stg_locations&lt;/b&gt;&lt;br/&gt;&lt;font color='#888888'&gt;Zone lookup table&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c8f0dc;strokeColor=#1a7a4a;strokeWidth=1.5;fontSize=11;arcSize=10;align=center;" vertex="1" parent="1">
+      <mxGeometry x="498" y="250" width="186" height="50" as="geometry" />
+    </mxCell>
+
+    <!-- Marts -->
+    <mxCell id="marts_header" value="MARTS LAYER (Star Schema)" style="text;html=1;strokeColor=none;fillColor=none;fontSize=9;fontStyle=1;fontColor=#1a7a4a;letterSpacing=1;align=center;" vertex="1" parent="1">
+      <mxGeometry x="490" y="318" width="200" height="18" as="geometry" />
+    </mxCell>
+
+    <mxCell id="fact_trips" value="&lt;b&gt;fact_trips&lt;/b&gt;&lt;br/&gt;trip_id · fare · distance&lt;br/&gt;pickup_date_key · vendor_key&lt;br/&gt;location_key · payment_key" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1a7a4a;strokeColor=#0d4a2a;strokeWidth=2;fontSize=11;arcSize=10;align=center;fontColor=#ffffff;" vertex="1" parent="1">
+      <mxGeometry x="498" y="336" width="186" height="80" as="geometry" />
+    </mxCell>
+
+    <mxCell id="dim_date" value="&lt;b&gt;dim_date&lt;/b&gt;&lt;br/&gt;date_key · year · month&lt;br/&gt;weekday · is_weekend" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c8f0dc;strokeColor=#1a7a4a;strokeWidth=1.5;fontSize=10;arcSize=10;align=center;" vertex="1" parent="1">
+      <mxGeometry x="498" y="438" width="186" height="56" as="geometry" />
+    </mxCell>
+
+    <mxCell id="dim_location" value="&lt;b&gt;dim_location&lt;/b&gt;&lt;br/&gt;location_id · zone · borough" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c8f0dc;strokeColor=#1a7a4a;strokeWidth=1.5;fontSize=10;arcSize=10;align=center;" vertex="1" parent="1">
+      <mxGeometry x="498" y="508" width="186" height="50" as="geometry" />
+    </mxCell>
+
+    <mxCell id="dim_vendor" value="&lt;b&gt;dim_vendor&lt;/b&gt;&lt;br/&gt;vendor_key · vendor_name" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c8f0dc;strokeColor=#1a7a4a;strokeWidth=1.5;fontSize=10;arcSize=10;align=center;" vertex="1" parent="1">
+      <mxGeometry x="498" y="572" width="186" height="50" as="geometry" />
+    </mxCell>
+
+    <mxCell id="dim_payment" value="&lt;b&gt;dim_payment&lt;/b&gt;&lt;br/&gt;payment_key · payment_type" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c8f0dc;strokeColor=#1a7a4a;strokeWidth=1.5;fontSize=10;arcSize=10;align=center;" vertex="1" parent="1">
+      <mxGeometry x="498" y="636" width="186" height="50" as="geometry" />
+    </mxCell>
+
+    <!-- dbt tests -->
+    <mxCell id="dbt_tests" value="&lt;b&gt;dbt Tests&lt;/b&gt;&lt;br/&gt;• not_null on all PKs&lt;br/&gt;• unique on all PKs&lt;br/&gt;• relationships (FK checks)&lt;br/&gt;• accepted_values&lt;br/&gt;• custom: no negative fares" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff3cd;strokeColor=#d4a000;strokeWidth=1.5;fontSize=10;arcSize=10;align=left;spacingLeft=8;verticalAlign=top;spacingTop=6;" vertex="1" parent="1">
+      <mxGeometry x="498" y="702" width="186" height="100" as="geometry" />
+    </mxCell>
+
+    <!-- ───────────────────────────────────────────────── -->
+    <!-- WAREHOUSE LAYER -->
+    <!-- ───────────────────────────────────────────────── -->
+
+    <mxCell id="postgres_db" value="&lt;b&gt;PostgreSQL&lt;/b&gt;&lt;br/&gt;(via Docker)&lt;br/&gt;localhost:5432" style="shape=cylinder3;whiteSpace=wrap;html=1;fillColor=#fde8b0;strokeColor=#8a5a00;strokeWidth=2;fontSize=11;align=center;arcSize=10;" vertex="1" parent="1">
+      <mxGeometry x="742" y="170" width="156" height="80" as="geometry" />
+    </mxCell>
+
+    <mxCell id="schema_raw" value="Schema: raw&lt;br/&gt;raw_taxi_trips" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff3dc;strokeColor=#c08000;strokeWidth=1;fontSize=10;arcSize=8;align=center;" vertex="1" parent="1">
+      <mxGeometry x="742" y="300" width="156" height="44" as="geometry" />
+    </mxCell>
+
+    <mxCell id="schema_staging" value="Schema: staging&lt;br/&gt;stg_taxi_trips · stg_locations" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff3dc;strokeColor=#c08000;strokeWidth=1;fontSize=10;arcSize=8;align=center;" vertex="1" parent="1">
+      <mxGeometry x="742" y="358" width="156" height="44" as="geometry" />
+    </mxCell>
+
+    <mxCell id="schema_marts" value="Schema: marts&lt;br/&gt;fact_trips&lt;br/&gt;dim_date · dim_location&lt;br/&gt;dim_vendor · dim_payment" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fde8b0;strokeColor=#8a5a00;strokeWidth=1.5;fontSize=10;arcSize=8;align=center;" vertex="1" parent="1">
+      <mxGeometry x="742" y="416" width="156" height="80" as="geometry" />
+    </mxCell>
+
+    <mxCell id="dbt_docs" value="&lt;b&gt;dbt Docs Site&lt;/b&gt;&lt;br/&gt;Auto-generated catalog&lt;br/&gt;localhost:8080" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff3dc;strokeColor=#c08000;strokeWidth=1.5;fontSize=10;arcSize=8;align=center;" vertex="1" parent="1">
+      <mxGeometry x="742" y="540" width="156" height="56" as="geometry" />
+    </mxCell>
+
+    <mxCell id="analytics_query" value="&lt;b&gt;Analytics Queries&lt;/b&gt;&lt;br/&gt;e.g. Top pickup zones&lt;br/&gt;by avg fare on weekdays" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff3dc;strokeColor=#c08000;strokeWidth=1.5;fontSize=10;arcSize=8;align=center;" vertex="1" parent="1">
+      <mxGeometry x="742" y="614" width="156" height="56" as="geometry" />
+    </mxCell>
+
+    <!-- ───────────────────────────────────────────────── -->
+    <!-- ORCHESTRATION LAYER -->
+    <!-- ───────────────────────────────────────────────── -->
+
+    <mxCell id="airflow_ui" value="&lt;b&gt;Airflow UI&lt;/b&gt;&lt;br/&gt;localhost:8080&lt;br/&gt;&lt;font color='#888888'&gt;Monitor DAG runs&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffd6d6;strokeColor=#8a1a1a;strokeWidth=1.5;fontSize=11;arcSize=10;align=center;" vertex="1" parent="1">
+      <mxGeometry x="958" y="170" width="164" height="70" as="geometry" />
+    </mxCell>
+
+    <mxCell id="dag_schedule" value="&lt;b&gt;DAG Schedule&lt;/b&gt;&lt;br/&gt;Cron: 0 6 1 * *&lt;br/&gt;&lt;font color='#888888'&gt;1st of every month, 6AM&lt;/font&gt;" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffd6d6;strokeColor=#8a1a1a;strokeWidth=1.5;fontSize=11;arcSize=10;align=center;" vertex="1" parent="1">
+      <mxGeometry x="958" y="286" width="164" height="70" as="geometry" />
+    </mxCell>
+
+    <!-- DAG Tasks -->
+    <mxCell id="task1" value="Task 1&lt;br/&gt;&lt;b&gt;ingest_raw&lt;/b&gt;&lt;br/&gt;Run Python script" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffb3b3;strokeColor=#8a1a1a;strokeWidth=1.5;fontSize=10;arcSize=8;align=center;" vertex="1" parent="1">
+      <mxGeometry x="968" y="404" width="144" height="56" as="geometry" />
+    </mxCell>
+
+    <mxCell id="task2" value="Task 2&lt;br/&gt;&lt;b&gt;dbt_run&lt;/b&gt;&lt;br/&gt;Build all models" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffb3b3;strokeColor=#8a1a1a;strokeWidth=1.5;fontSize=10;arcSize=8;align=center;" vertex="1" parent="1">
+      <mxGeometry x="968" y="494" width="144" height="56" as="geometry" />
+    </mxCell>
+
+    <mxCell id="task3" value="Task 3&lt;br/&gt;&lt;b&gt;dbt_test&lt;/b&gt;&lt;br/&gt;Run all data tests" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffb3b3;strokeColor=#8a1a1a;strokeWidth=1.5;fontSize=10;arcSize=8;align=center;" vertex="1" parent="1">
+      <mxGeometry x="968" y="584" width="144" height="56" as="geometry" />
+    </mxCell>
+
+    <mxCell id="task_fail" value="On Failure&lt;br/&gt;&lt;b&gt;Alert &amp; Stop&lt;/b&gt;&lt;br/&gt;DAG halts downstream tasks" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffcccc;strokeColor=#cc0000;strokeWidth=1.5;fontSize=10;arcSize=8;align=center;strokeDasharray=6 3;" vertex="1" parent="1">
+      <mxGeometry x="968" y="674" width="144" height="60" as="geometry" />
+    </mxCell>
+
+    <mxCell id="backfill_note" value="Supports backfilling:&lt;br/&gt;{{ ds }} template for&lt;br/&gt;historical month runs" style="text;html=1;strokeColor=#8a1a1a;fillColor=#fff0f0;rounded=1;arcSize=8;fontSize=10;align=center;spacingTop=4;" vertex="1" parent="1">
+      <mxGeometry x="958" y="754" width="164" height="60" as="geometry" />
+    </mxCell>
+
+    <!-- ───────────────────────────────────────────────── -->
+    <!-- ARROWS -->
+    <!-- ───────────────────────────────────────────────── -->
+
+    <!-- Source → Python -->
+    <mxCell id="e1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;strokeColor=#4a5284;strokeWidth=2;endArrow=block;endFill=1;" edge="1" source="nyc_source" target="python_script" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <!-- Source → monthly file -->
+    <mxCell id="e2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#4a5284;strokeWidth=1.5;endArrow=block;endFill=1;" edge="1" source="nyc_source" target="monthly_file" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <!-- monthly file → Python -->
+    <mxCell id="e3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#4a5284;strokeWidth=1.5;endArrow=block;endFill=1;" edge="1" source="monthly_file" target="python_script" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <!-- Python → idempotent check -->
+    <mxCell id="e4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#6b3fa0;strokeWidth=2;endArrow=block;endFill=1;" edge="1" source="python_script" target="idempotent" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <!-- idempotent → raw table -->
+    <mxCell id="e5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#6b3fa0;strokeWidth=2;endArrow=block;endFill=1;" edge="1" source="idempotent" target="raw_table" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <!-- raw table → stg_trips -->
+    <mxCell id="e6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#1a7a4a;strokeWidth=2;endArrow=block;endFill=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="raw_table" target="stg_trips" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <!-- stg_trips → fact_trips -->
+    <mxCell id="e7" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#1a7a4a;strokeWidth=2;endArrow=block;endFill=1;" edge="1" source="stg_trips" target="fact_trips" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <!-- stg_locations → dim_location -->
+    <mxCell id="e8" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#1a7a4a;strokeWidth=1.5;endArrow=block;endFill=1;" edge="1" source="stg_locations" target="dim_location" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <!-- fact → dims -->
+    <mxCell id="e9" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#1a7a4a;strokeWidth=1.5;endArrow=open;endFill=0;strokeDasharray=4 3;" edge="1" source="fact_trips" target="dim_date" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e10" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#1a7a4a;strokeWidth=1.5;endArrow=open;endFill=0;strokeDasharray=4 3;" edge="1" source="fact_trips" target="dim_location" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e11" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#1a7a4a;strokeWidth=1.5;endArrow=open;endFill=0;strokeDasharray=4 3;" edge="1" source="fact_trips" target="dim_vendor" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e12" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#1a7a4a;strokeWidth=1.5;endArrow=open;endFill=0;strokeDasharray=4 3;" edge="1" source="fact_trips" target="dim_payment" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <!-- dbt models → dbt tests -->
+    <mxCell id="e13" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#d4a000;strokeWidth=1.5;endArrow=block;endFill=1;" edge="1" source="dim_payment" target="dbt_tests" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <!-- dbt → Postgres -->
+    <mxCell id="e14" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#8a5a00;strokeWidth=2;endArrow=block;endFill=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="fact_trips" target="schema_marts" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <mxCell id="e15" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#8a5a00;strokeWidth=1.5;endArrow=block;endFill=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="raw_table" target="schema_raw" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <mxCell id="e16" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#8a5a00;strokeWidth=1.5;endArrow=block;endFill=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="stg_trips" target="schema_staging" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <!-- Airflow → Tasks -->
+    <mxCell id="e17" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#8a1a1a;strokeWidth=2;endArrow=block;endFill=1;" edge="1" source="dag_schedule" target="task1" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e18" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#8a1a1a;strokeWidth=2;endArrow=block;endFill=1;" edge="1" source="task1" target="task2" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e19" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#8a1a1a;strokeWidth=2;endArrow=block;endFill=1;" edge="1" source="task2" target="task3" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+    <mxCell id="e20" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#cc0000;strokeWidth=1.5;endArrow=block;endFill=1;strokeDasharray=6 3;" edge="1" source="task3" target="task_fail" parent="1">
+      <mxGeometry relative="1" as="geometry" />
+    </mxCell>
+
+    <!-- Airflow triggers ingestion -->
+    <mxCell id="e21" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#8a1a1a;strokeWidth=1.5;endArrow=open;endFill=0;strokeDasharray=4 3;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="task1" target="python_script" parent="1">
+      <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="950" y="432" /><mxPoint x="360" y="432" /><mxPoint x="360" y="205" /></Array></mxGeometry>
+    </mxCell>
+
+    <!-- Airflow triggers dbt run -->
+    <mxCell id="e22" style="edgeStyle=orthogonalEdgeStyle;rounded=0;strokeColor=#8a1a1a;strokeWidth=1.5;endArrow=open;endFill=0;strokeDasharray=4 3;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" source="task2" target="stg_trips" parent="1">
+      <mxGeometry relative="1" as="geometry"><Array as="points"><mxPoint x="950" y="522" /><mxPoint x="700" y="522" /><mxPoint x="700" y="206" /></Array></mxGeometry>
+    </mxCell>
+
+    <!-- ───────────────────────────────────────────────── -->
+    <!-- LEGEND -->
+    <!-- ───────────────────────────────────────────────── -->
+
+    <mxCell id="legend_bg" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f9f9f9;strokeColor=#cccccc;strokeWidth=1;arcSize=4;" vertex="1" parent="1">
+      <mxGeometry x="1170" y="110" width="220" height="280" as="geometry" />
+    </mxCell>
+
+    <mxCell id="legend_title" value="LEGEND" style="text;html=1;strokeColor=none;fillColor=none;fontSize=10;fontStyle=1;fontColor=#333333;letterSpacing=2;align=center;" vertex="1" parent="1">
+      <mxGeometry x="1170" y="118" width="220" height="20" as="geometry" />
+    </mxCell>
+
+    <mxCell id="l1" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dce4ff;strokeColor=#4a5284;strokeWidth=1.5;arcSize=10;" vertex="1" parent="1">
+      <mxGeometry x="1182" y="148" width="24" height="20" as="geometry" />
+    </mxCell>
+    <mxCell id="l1t" value="Data source / file" style="text;html=1;strokeColor=none;fillColor=none;fontSize=11;align=left;" vertex="1" parent="1">
+      <mxGeometry x="1214" y="148" width="160" height="20" as="geometry" />
+    </mxCell>
+
+    <mxCell id="l2" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e8d9ff;strokeColor=#6b3fa0;strokeWidth=1.5;arcSize=10;" vertex="1" parent="1">
+      <mxGeometry x="1182" y="178" width="24" height="20" as="geometry" />
+    </mxCell>
+    <mxCell id="l2t" value="Python ingestion" style="text;html=1;strokeColor=none;fillColor=none;fontSize=11;align=left;" vertex="1" parent="1">
+      <mxGeometry x="1214" y="178" width="160" height="20" as="geometry" />
+    </mxCell>
+
+    <mxCell id="l3" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#c8f0dc;strokeColor=#1a7a4a;strokeWidth=1.5;arcSize=10;" vertex="1" parent="1">
+      <mxGeometry x="1182" y="208" width="24" height="20" as="geometry" />
+    </mxCell>
+    <mxCell id="l3t" value="dbt model (staging / dim)" style="text;html=1;strokeColor=none;fillColor=none;fontSize=11;align=left;" vertex="1" parent="1">
+      <mxGeometry x="1214" y="208" width="160" height="20" as="geometry" />
+    </mxCell>
+
+    <mxCell id="l4" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#1a7a4a;strokeColor=#0d4a2a;strokeWidth=2;arcSize=10;" vertex="1" parent="1">
+      <mxGeometry x="1182" y="238" width="24" height="20" as="geometry" />
+    </mxCell>
+    <mxCell id="l4t" value="Fact table (core model)" style="text;html=1;strokeColor=none;fillColor=none;fontSize=11;align=left;" vertex="1" parent="1">
+      <mxGeometry x="1214" y="238" width="160" height="20" as="geometry" />
+    </mxCell>
+
+    <mxCell id="l5" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fde8b0;strokeColor=#8a5a00;strokeWidth=1.5;arcSize=10;" vertex="1" parent="1">
+      <mxGeometry x="1182" y="268" width="24" height="20" as="geometry" />
+    </mxCell>
+    <mxCell id="l5t" value="Warehouse / storage" style="text;html=1;strokeColor=none;fillColor=none;fontSize=11;align=left;" vertex="1" parent="1">
+      <mxGeometry x="1214" y="268" width="160" height="20" as="geometry" />
+    </mxCell>
+
+    <mxCell id="l6" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffb3b3;strokeColor=#8a1a1a;strokeWidth=1.5;arcSize=10;" vertex="1" parent="1">
+      <mxGeometry x="1182" y="298" width="24" height="20" as="geometry" />
+    </mxCell>
+    <mxCell id="l6t" value="Airflow DAG task" style="text;html=1;strokeColor=none;fillColor=none;fontSize=11;align=left;" vertex="1" parent="1">
+      <mxGeometry x="1214" y="298" width="160" height="20" as="geometry" />
+    </mxCell>
+
+    <mxCell id="l7" value="" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff3cd;strokeColor=#d4a000;strokeWidth=1.5;arcSize=10;" vertex="1" parent="1">
+      <mxGeometry x="1182" y="328" width="24" height="20" as="geometry" />
+    </mxCell>
+    <mxCell id="l7t" value="dbt tests / checks" style="text;html=1;strokeColor=none;fillColor=none;fontSize=11;align=left;" vertex="1" parent="1">
+      <mxGeometry x="1214" y="328" width="160" height="20" as="geometry" />
+    </mxCell>
+
+    <!-- Dashed line legend -->
+    <mxCell id="l8_line" value="" style="edgeStyle=none;strokeColor=#1a7a4a;strokeWidth=1.5;endArrow=open;endFill=0;strokeDasharray=4 3;" edge="1" parent="1">
+      <mxGeometry relative="1" as="geometry"><mxPoint x="1182" y="368" as="sourcePoint" /><mxPoint x="1206" y="368" as="targetPoint" /></mxGeometry>
+    </mxCell>
+    <mxCell id="l8t" value="FK relationship (dim join)" style="text;html=1;strokeColor=none;fillColor=none;fontSize=11;align=left;" vertex="1" parent="1">
+      <mxGeometry x="1214" y="358" width="160" height="20" as="geometry" />
+    </mxCell>
+
+  </root>
+</mxGraphModel>
