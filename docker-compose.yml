@@ -25,7 +25,7 @@ networks:
 #  same env vars. Define once, reuse below.
 # ─────────────────────────────────────────
 x-airflow-common: &airflow-common
-  image: apache/airflow:2.8.1
+  build: .
   environment:
     # Points Airflow to its own metadata database (airflow_db service)
     AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@airflow_db:5432/airflow
@@ -59,6 +59,8 @@ x-airflow-common: &airflow-common
 
     # ingestion scripts (Python) → mounted so DAGs can call them
     - ./ingestion:/opt/ingestion
+    
+    - ./data:/opt/data
 
     # Airflow logs volume
     - airflow_logs:/opt/airflow/logs
