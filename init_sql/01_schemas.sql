@@ -9,3 +9,7 @@
     Date: 2026-04-07
     Notes: Run automatically on first container creation. 
 */
+
+CREATE SCHEMA IF NOT EXISTS raw;
+CREATE SCHEMA IF NOT EXISTS staging;
+CREATE SCHEMA IF NOT EXISTS marts;
