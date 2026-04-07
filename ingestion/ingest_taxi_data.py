@@ -1,3 +1,13 @@
+'''
+    File: ingest_taxi_data.sql
+    Purpose:
+        This file connect to postgres using sqlalchemy and psycopg2 driver
+        Then Reading the data: trips and zones
+        Lastly Ingesting the data into raw.trips & raw.zones tables.
+    Author: Youssef M.Makram M.Osman
+    Date: 2026-04-07
+'''
+
 import pandas as pd
 from sqlalchemy import create_engine
 
