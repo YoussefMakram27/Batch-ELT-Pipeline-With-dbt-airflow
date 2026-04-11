@@ -55,7 +55,7 @@ x-airflow-common: &airflow-common
     - ./dags:/opt/airflow/dags
 
     # dbt project folder → mounted into Airflow so it can run dbt commands
-    - ./dbt:/opt/dbt
+    - ./ELT_airflow_dbt_project:/opt/dbt
 
     # ingestion scripts (Python) → mounted so DAGs can call them
     - ./ingestion:/opt/ingestion
@@ -237,9 +237,8 @@ services:
       DBT_PROFILES_DIR: /opt/dbt/profiles
     volumes:
       # Mount dbt project
-      - ./dbt:/opt/dbt
-      # dbt profiles.yml (has postgres connection)
-      - dbt_profiles:/opt/dbt/profiles
+      - ./ELT_airflow_dbt_project:/opt/dbt
+      - ./ELT_airflow_dbt_project/profiles:/opt/dbt/profiles
     networks:
       - pipeline_net
     depends_on:
