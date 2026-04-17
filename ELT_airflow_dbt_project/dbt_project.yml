@@ -21,7 +21,6 @@ clean-targets:         # directories to be removed by `dbt clean`
   - "target"
   - "dbt_packages"
 
-
 # Configuring models
 # Full documentation: https://docs.getdbt.com/docs/configuring-models
 
@@ -30,6 +29,11 @@ clean-targets:         # directories to be removed by `dbt clean`
 # files using the `{{ config(...) }}` macro.
 models:
   ELT_airflow_dbt_project:
-    # Config indicated by + and applies to all files under models/example/
-    example:
+    +materialized: view
+
+    exploration:
       +materialized: view
+    staging:
+      +materialized: view
+    marts:
+      +materialized: table
