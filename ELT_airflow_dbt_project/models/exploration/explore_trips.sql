@@ -38,14 +38,11 @@ WHERE table_schema = 'raw'
 -- IDENTITY & UNIQUENESS
 -- ===================================================
 
--- (No Primrary Key)
+-- (No Primrary Key) trips
 /******************************Handle This*******************************/
--- Duplicates
 
-SELECT STRING_AGG(column_name, ', ')
-FROM information_schema.columns
-WHERE table_schema = 'raw'
-  AND table_name = 'trips'
+
+-- Duplicates
 
 SELECT *
 From raw.trips
@@ -74,4 +71,47 @@ WHERE NOT EXISTS (
   FROM raw.zones z
   WHERE z."LocationID" = t."PULocationID" OR  z."LocationID" = t."DOLocationID"
 ) -- No Orphan Keys
+
+-- ===================================================
+-- NULLS & MISSINGS
+-- ===================================================
+
+SELECT
+  COUNT(*) FILTER (WHERE "VendorID" IS NULL),
+  COUNT(*) FILTER (WHERE "tpep_pickup_datetime" IS NULL), 
+  COUNT(*) FILTER (WHERE "tpep_dropoff_datetime" IS NULL),
+  COUNT(*) FILTER (WHERE "passenger_count" IS NULL),
+  COUNT(*) FILTER (WHERE "trip_distance" IS NULL),
+  COUNT(*) FILTER (WHERE "RatecodeID" IS NULL),
+  COUNT(*) FILTER (WHERE "store_and_fwd_flag" IS NULL),
+  COUNT(*) FILTER (WHERE "PULocationID" IS NULL),
+  COUNT(*) FILTER (WHERE "DOLocationID" IS NULL),
+  COUNT(*) FILTER (WHERE "trip_distance" IS NULL), 
+  COUNT(*) FILTER (WHERE "payment_type" IS NULL),
+  COUNT(*) FILTER (WHERE "fare_amount" IS NULL),
+  COUNT(*) FILTER (WHERE "extra" IS NULL),
+  COUNT(*) FILTER (WHERE "mta_tax" IS NULL),
+  COUNT(*) FILTER (WHERE "tip_amount" IS NULL),
+  COUNT(*) FILTER (WHERE "tolls_amount" IS NULL), 
+  COUNT(*) FILTER (WHERE "improvement_surcharge" IS NULL),
+  COUNT(*) FILTER (WHERE "total_amount" IS NULL),
+  COUNT(*) FILTER (WHERE "congestion_surcharge" IS NULL), 
+  COUNT(*) FILTER (WHERE "Airport_fee" IS NULL),
+  COUNT(*) FILTER (WHERE "cbd_congestion_fee" IS NULL)
+
+FROM raw.trips; -- No NULLS
+
+
+SELECT
+  COUNT(*) FILTER (WHERE "LocationID" IS NULL),
+  COUNT(*) FILTER (WHERE "Borough" IS NULL), 
+  COUNT(*) FILTER (WHERE "Zone" IS NULL),
+  COUNT(*) FILTER (WHERE "service_zone" IS NULL)
+FROM RAW.zones; -- Borough: 1, Zone: 1, service_zone: 2
+
+
+SELECT *
+FROM raw.zones
+WHERE "Borough" IS NULL OR "Zone" IS NULL OR "service_zone" IS NULL 
+/****************************************Just two rows with nulls delete them******************/
 
