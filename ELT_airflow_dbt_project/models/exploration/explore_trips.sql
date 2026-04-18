@@ -11,12 +11,12 @@
 -- STRUCTURE & SHAPE
 -- ===================================================
 
--- How many Rows are there?
+-- Rows Count
 
 SELECT COUNT(*) FROM raw.trips -- 250,000
 SELECT COUNT(*) FROM raw.zones -- 265
 
--- What columns are there?
+-- Columns Count
 
 SELECT * FROM raw.trips LIMIT 20
 SELECT * FROM raw.zones LIMIT 20
@@ -113,5 +113,86 @@ FROM RAW.zones; -- Borough: 1, Zone: 1, service_zone: 2
 SELECT *
 FROM raw.zones
 WHERE "Borough" IS NULL OR "Zone" IS NULL OR "service_zone" IS NULL 
-/****************************************Just two rows with nulls delete them******************/
+/****************************** Just two rows with nulls delete them *******************************/
 
+-- ===================================================
+-- PLAYING WITH EACH COLUMN
+-- ===================================================
+
+-- VendorID
+
+SElECT DISTINCT "VendorID"
+From raw.trips -- 1, 2, 7
+/****************************** Replace 1:Creative Mobile Technologies, 2:Curb Mobility, 7:Helix  
+                                Rename VendorID -> vendor_name*******************************/
+
+-- tpep_pickup_datetime, tpep_dropoff_datetime
+
+SELECT MAX(trips.tpep_pickup_datetime) AS pickup_maxy,
+       MIN(trips.tpep_pickup_datetime) AS pickup_mini,
+       MAX(trips.tpep_dropoff_datetime) As dropoff_maxy,
+       MIN(trips.tpep_dropoff_datetime) AS dropoff_mini
+FROM raw.trips
+
+SELECT *
+FROM raw.trips
+WHERE trips.tpep_pickup_datetime = '2025-01-04 03:59:57'
+
+
+SELECT *
+FROM raw.trips
+WHERE trips.tpep_dropoff_datetime = '2025-01-05 03:39:48'
+
+/****************************** Problem: pickup_time:  2025-01-04 03:43:19
+                                         dropoff_time: 2025-01-05 03:39:48  
+                                Rename tpep_pickup_datetime  ->  pickup_datetime
+                                Rename tpep_dropoff_datetime -> dropoff_datetime *******************************/
+
+
+-- Checking Whether pickup is after dropoff
+
+SELECT *
+FROM raw.trips 
+WHERE "tpep_pickup_datetime" > "tpep_dropoff_datetime"
+
+/****************************** Problem (1 ROW): pickup_time:  2025-01-02 12:26:00
+                                                 dropoff_time: 2025-01-02 11:29:58 *******************************/
+
+-- Checking Wrong Durations
+
+SELECT *,
+      "tpep_dropoff_datetime" - "tpep_pickup_datetime" AS trip_range
+FROM raw.trips
+ORDER BY trip_range DESC
+
+SELECT COUNT(*)
+FROM raw.trips
+WHERE "tpep_dropoff_datetime" - "tpep_pickup_datetime" > INTERVAL '2 HOURS' -- 220 trips
+
+SELECT COUNT(*)
+FROM raw.trips
+WHERE "tpep_dropoff_datetime" - "tpep_pickup_datetime" < INTERVAL '1 MINUTES' -- 4148
+
+
+SELECT COUNT(*)
+FROM raw.trips
+WHERE "tpep_dropoff_datetime" - "tpep_pickup_datetime" < INTERVAL '1 SECONDS' -- 94 
+
+****************************** Problem (4148 ROWs): Duration of trips < 1 minute
+                                       (220 ROWs) : Duration of trips > 2 hours 
+                                                    NEED TO BE CHECHKED WITH SOURCE SYSTEM AND FLAG THEM 
+                                                    *******************************/
+
+-- passenger_count
+SELECT * FROM raw.trips LIMIT 20
+
+-- trip_distance
+
+-- RateCodeID
+
+-- store_and_fwd_flag
+
+-- payment_type
+
+-- fare_amount, extra, mta_tax, tip_amount, tolls_amount, imporvement_surchage, total_amount, 
+-- congestion_surchage, Airport_fee, cbd_congestion_fee
