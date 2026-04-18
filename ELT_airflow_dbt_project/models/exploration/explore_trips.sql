@@ -14,24 +14,18 @@
 -- Rows Count
 
 SELECT COUNT(*) FROM raw.trips -- 250,000
-SELECT COUNT(*) FROM raw.zones -- 265
+
 
 -- Columns Count
 
 SELECT * FROM raw.trips LIMIT 20
-SELECT * FROM raw.zones LIMIT 20
 
 -- DataTypes
 
 SELECT column_name, data_type
 FROM information_schema.columns
 WHERE table_schema = 'raw'
-  AND table_name = 'trips';
-
-SELECT column_name, columns.data_type
-FROM information_schema.columns
-WHERE table_schema = 'raw'
-  AND table_name = 'zones'; -- Data Types Correct
+  AND table_name = 'trips'; -- Data Types Correct
 
 
 -- ===================================================
@@ -52,15 +46,6 @@ GROUP BY "VendorID", tpep_pickup_datetime, tpep_dropoff_datetime, passenger_coun
          total_amount, congestion_surcharge, "Airport_fee", cbd_congestion_fee
 HAVING COUNT(*) > 1  -- No Duplicates
 
-SELECT STRING_AGG(column_name, ', ')
-FROM information_schema.columns
-WHERE table_schema = 'raw'
-AND table_name = 'zones'
-
-SELECT *
-FROM raw.zones
-GROUP BY "LocationID", "Borough", "Zone", "service_zone"
-HAVING COUNT(*) > 1 -- No Duplicates
 
 -- Foregin Key Existence in The Parent Check
 
@@ -101,19 +86,6 @@ SELECT
 
 FROM raw.trips; -- No NULLS
 
-
-SELECT
-  COUNT(*) FILTER (WHERE "LocationID" IS NULL),
-  COUNT(*) FILTER (WHERE "Borough" IS NULL), 
-  COUNT(*) FILTER (WHERE "Zone" IS NULL),
-  COUNT(*) FILTER (WHERE "service_zone" IS NULL)
-FROM RAW.zones; -- Borough: 1, Zone: 1, service_zone: 2
-
-
-SELECT *
-FROM raw.zones
-WHERE "Borough" IS NULL OR "Zone" IS NULL OR "service_zone" IS NULL 
-/****************************** Just two rows with nulls delete them *******************************/
 
 -- ===================================================
 -- PLAYING WITH EACH COLUMN
@@ -178,21 +150,73 @@ SELECT COUNT(*)
 FROM raw.trips
 WHERE "tpep_dropoff_datetime" - "tpep_pickup_datetime" < INTERVAL '1 SECONDS' -- 94 
 
-****************************** Problem (4148 ROWs): Duration of trips < 1 minute
+/****************************** Problem (4148 ROWs): Duration of trips < 1 minute
                                        (220 ROWs) : Duration of trips > 2 hours 
                                                     NEED TO BE CHECHKED WITH SOURCE SYSTEM AND FLAG THEM 
                                                     *******************************/
 
+
 -- passenger_count
-SELECT * FROM raw.trips LIMIT 20
+
+SELECT DISTINCT trips.passenger_count
+FROM raw.trips -- o -> 9
+
+SELECT COUNT(*)
+FROM raw.trips 
+WHERE trips.passenger_count <= 0 -- 1838
+
+/****************************** Problem (1838 ROWs): passenger_count = 0
+                                                    (MAKE THEM = 1 BASED ON THE SOURCE SYSTEM) 
+                                                    *******************************/
+
 
 -- trip_distance
 
+SELECT MAX(trips.trip_distance),
+       MIN(trips.trip_distance)
+FROM raw.trips -- min: 0, max=133.3
+
+SELECT COUNT(*)
+FROM raw.trips
+WHERE trips.trip_distance > 30  -- 279
+
+SELECT COUNT(*)
+FROM raw.trips
+WHERE trips.trip_distance = 0  -- 4033
+
+SELECT *
+FROM raw.trips
+WHERE trips.trip_distance = 0  
+
+/****************************** Problem (279 ROWs) : trp_distance > 30
+                                       (4033 ROWs): trip_ditance = 0
+                                            NEED TO BE CHECHKED WITH SOURCE SYSTEM AND FLAG THEM
+                                                    *******************************/
+
 -- RateCodeID
+
+SELECT DISTINCT trips."RatecodeID"
+FROM raw.trips -- 1,2,3,4,5,6,99
+
+/****************************** Rename RatecodeID -> rate_code_ID
+                               Replace(1=Standard, 2=JFK, 3=Newark, 4=Nassau/Westchester, 5=Negotiated,
+                                       6=Group ride, 99=Unknown) *******************************/
 
 -- store_and_fwd_flag
 
+SELECT DISTINCT trips."store_and_fwd_flag"
+FROM raw.trips -- N, Y
+
+/****************************** Replace Y: stored_then_sent, N: sent_immediately *******************************/
+
 -- payment_type
+
+SELECT DISTINCT trips.payment_type
+FROM raw.trips -- 1 2 3 4
+
+/****************************** Replace (1=Credit card, 2=Cash, 3=No charge, 4=Dispute)*******************************/
 
 -- fare_amount, extra, mta_tax, tip_amount, tolls_amount, imporvement_surchage, total_amount, 
 -- congestion_surchage, Airport_fee, cbd_congestion_fee
+
+SELECT * FROM raw.trips LIMIT 20
