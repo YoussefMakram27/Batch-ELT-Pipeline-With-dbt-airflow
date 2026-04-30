@@ -29,8 +29,6 @@ clean-targets:         # directories to be removed by `dbt clean`
 # files using the `{{ config(...) }}` macro.
 models:
   ELT_airflow_dbt_project:
-    +materialized: view
-
     exploration:
       +materialized: view
     staging:

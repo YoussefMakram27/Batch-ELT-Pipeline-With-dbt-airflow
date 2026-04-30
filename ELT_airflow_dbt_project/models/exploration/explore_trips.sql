@@ -189,7 +189,7 @@ FROM raw.trips
 WHERE trips.trip_distance = 0  
 
 /****************************** Problem (279 ROWs) : trp_distance > 30
-                                       (4033 ROWs): trip_ditance = 0
+                                        (4033 ROWs): trip_ditance = 0
                                             NEED TO BE CHECHKED WITH SOURCE SYSTEM AND FLAG THEM
                                                     *******************************/
 
@@ -220,3 +220,16 @@ FROM raw.trips -- 1 2 3 4
 -- congestion_surchage, Airport_fee, cbd_congestion_fee
 
 SELECT * FROM raw.trips LIMIT 20
+
+SELECT COUNT(*)
+FROM raw.trips
+WHERE fare_amount < 0
+   OR extra < 0
+   OR trips.mta_tax < 0
+   OR tolls_amount < 0
+   OR trips.improvement_surcharge < 0
+   OR trips.congestion_surcharge < 0
+   OR trips."Airport_fee" < 0
+   OR trips.cbd_congestion_fee < 0
+   OR total_amount < 0
+   OR tip_amount < 0;
